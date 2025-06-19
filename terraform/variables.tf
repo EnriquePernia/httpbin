@@ -11,10 +11,5 @@ variable "nodes" {
       replicas = 1
       memory   = "1g"
     }
-    "node-2" = {
-      role     = "agent"
-      replicas = 1
-      memory   = "2g"
-    }
   }
 }

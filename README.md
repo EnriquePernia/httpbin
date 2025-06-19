@@ -81,9 +81,6 @@ kubectl get nodes
 # Deploy HTTPBin pods and service
 chmod +x ./scripts/deploy.sh
 ./deploy.sh
-
-# Wait for pods to be ready
-kubectl wait --for=condition=available --timeout=300s deployment/httpbin
 ```
 
 ## 🧪 Testing
@@ -137,7 +134,7 @@ resource "k3d_cluster" "sample_cluster" {
 - **Replicas**: 3 pods for load balancing demonstration
 - **Resources**: 64Mi memory, 50m CPU per pod
 - **Anti-affinity**: Pods spread across different nodes
-- **Health checks**: Liveness and readiness probes
+- **Health checks**: Liveness, startup and readiness probes
 
 ### Ingress Configuration
 

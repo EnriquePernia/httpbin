@@ -5,7 +5,7 @@
 echo "🚀 Deploying HTTPBin to k3d cluster..."
 
 # Apply the deployment
-kubectl apply -f ../deployment.yaml
+kubectl apply -f ./deployment.yaml
 
 # Wait for deployment to be ready
 echo "⏳ Waiting for deployment to be ready..."

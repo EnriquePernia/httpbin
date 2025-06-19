@@ -57,57 +57,6 @@ unzip terraform_1.6.0_linux_amd64.zip && sudo mv terraform /usr/local/bin/
 - **HTTPBin**: Test application with 3 replicas
 - **Port Mapping**: localhost:8080 → cluster:80, localhost:8443 → cluster:443
 
-## 🚀 Quick Start
-
-### 1. Clone and Setup
-
-```bash
-git clone https://github.com/EnriquePernia/httpbin.git
-cd httpbin-k3d-cluster
-```
-
-### 2. Deploy Infrastructure
-
-```bash
-# Review plan before applying
-terraform -chdir=terraform init
-terraform -chdir=terraform plan -out=tfplan
-terraform -chdir=terraform show tfplan  # Review what will be created
-terraform -chdir=terraform apply tfplan  # Apply reviewed plan
-# Verify cluster
-kubectl get nodes
-```
-
-### 3. Deploy HTTPBin Application
-
-```bash
-# Deploy HTTPBin pods and service
-chmod +x ./scripts/deploy.sh
-./scripts/deploy.sh
-```
-
-## 🧪 Testing
-
-### Test Load Balancing
-
-```bash
-# Test ingress load balancing
-chmod +x ./scripts/test-loadbalancer.sh
-./scripts/test-loadbalancer.sh
-```
-
-### Available HTTPBin Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `/get` | GET request data |
-| `/post` | POST request data |
-| `/status/{code}` | Return status code |
-| `/json` | Return JSON |
-| `/headers` | Return headers |
-| `/ip` | Return client IP |
-| `/uuid` | Return random UUID |
-
 ## 🔧 Configuration
 
 ### Cluster Configuration
@@ -158,33 +107,112 @@ resource "k3d_cluster" "sample_cluster" {
 
 - **Path**: All paths (`/`)
 
-## 🎛️ Management Commands
+## 🚀 Quick Start
 
-### Cluster Management
-
-```bash
-# View cluster resources
-kubectl get all
-
-# Check ingress status
-kubectl get ingress httpbin-ingress
-
-# View logs
-kubectl logs -l app=httpbin -f
-```
-
-### Troubleshooting
+### 1. Clone and Setup
 
 ```bash
-# Check Traefik status
-kubectl get pods -n kube-system -l app.kubernetes.io/name=traefik
-
-# View Traefik logs
-kubectl logs -n kube-system -l app.kubernetes.io/name=traefik
-
-# Test service connectivity
-kubectl run debug --image=curlimages/curl --rm -it --restart=Never -- /bin/sh
+git clone https://github.com/EnriquePernia/httpbin.git
+cd httpbin-k3d-cluster
 ```
+
+### 2. Deploy Infrastructure
+
+```bash
+# Review plan before applying
+terraform -chdir=terraform init
+terraform -chdir=terraform plan -out=tfplan
+terraform -chdir=terraform show tfplan  # Review what will be created
+terraform -chdir=terraform apply tfplan  # Apply reviewed plan
+# Verify cluster
+kubectl get nodes
+```
+
+### 3. Deploy HTTPBin Application
+
+```bash
+# Deploy HTTPBin pods and service
+chmod +x ./scripts/deploy.sh
+./scripts/deploy.sh
+```
+
+- Deploys HTTPBin pods and service
+- Waits for pods to be ready
+- Tests both service and ingress connectivity
+- Shows pod distribution across nodes
+
+### 4. Test Ingress
+
+```bash
+# Test ingress load balancing
+chmod +x ./scripts/test-loadbalancer.sh
+./scripts/test-loadbalancer.sh
+```
+
+- Makes 8 requests through ingress
+- Shows different origin IPs = load balancing working
+- Quick verification that traffic distributes across pods
+
+#### 🎯 Expected Results
+
+**Successful Load Balancing:**
+
+```bash
+INGRESS:
+Request 1: "origin": "10.42.2.0"
+Request 2: "origin": "10.42.0.1" 
+Request 3: "origin": "10.42.1.0"
+Request 4: "origin": "10.42.2.0"
+...
+```
+
+**Different origin IPs = Different pods handling requests!** ✅
+
+Keep in mind that what you are seeing is the **gateway IP** so if adding more nodes, the number of IPs could not match the nodes count.
+
+┌─────────────────────────────────────────────────────────────┐
+│                    EXTERNAL TRAFFIC                        │
+│                 localhost:8080 requests                    │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────────────────┐
+│                TRAEFIK LOAD BALANCER                       │
+│            (runs on control plane)                         │
+│         Decides which pod gets the request                 │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+              ┌───────┼───────┐
+              │   ROUND ROBIN │
+              └───────┼───────┘
+                      │
+    ┌─────────────────┼─────────────────┐
+    │                 │                 │
+    ▼                 ▼                 ▼
+┌─────────┐    ┌─────────────┐    ┌─────────────┐
+│Gateway  │    │Gateway      │    │Gateway      │
+│10.42.0.1│    │10.42.1.0    │    │10.42.2.0    │
+└────┬────┘    └──────┬──────┘    └──────┬──────┘
+     │                │                  │
+     ▼                ▼                  ▼
+┌─────────┐    ┌─────────────┐    ┌─────────────┐
+│ Pod A   │    │ Pod B       │    │ Pod C & D   │
+│10.42.0.x│    │10.42.1.x    │    │10.42.3.x    │
+│         │    │             │    │10.42.4.x    │
+│agent-0  │    │agent-1      │    │node-2-0     │
+│         │    │             │    │node-1-0     │
+└─────────┘    └─────────────┘    └─────────────┘
+
+### Available HTTPBin Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/get` | GET request data |
+| `/post` | POST request data |
+| `/status/{code}` | Return status code |
+| `/json` | Return JSON |
+| `/headers` | Return headers |
+| `/ip` | Return client IP |
+| `/uuid` | Return random UUID |
 
 ## 🔍 Load Balancing Verification
 
@@ -198,13 +226,13 @@ kubectl run debug --image=curlimages/curl --rm -it --restart=Never -- /bin/sh
 
 ```bash
 # Real-time log monitoring
-kubectl logs -f -l app=httpbin --prefix=true
+kubectl logs -f -l app=httpbin-secure --prefix=true -n httpbin-secure
 
 # Watch resource usage
-watch kubectl top pods -l app=httpbin
+watch kubectl top pods -l app=httpbin-secure -n httpbin-secure
 
 # Monitor endpoints
-watch kubectl get endpoints httpbin-service
+watch kubectl get endpoints httpbin-secure-service -n httpbin-secure
 ```
 
 ## 🚨 Troubleshooting
@@ -228,7 +256,7 @@ kubectl port-forward -n kube-system svc/traefik 8082:80
 
 ```bash
 # Check pod status
-kubectl describe pods -l app=httpbin
+kubectl describe pods -l app=httpbin-secure -n httpbin-secure
 
 # View events
 kubectl get events --sort-by=.metadata.creationTimestamp
@@ -241,10 +269,10 @@ kubectl top nodes
 
 ```bash
 # Verify service endpoints
-kubectl get endpoints httpbin-service
+kubectl get endpoints httpbin-secure-service -n httpbin-secure
 
 # Check service configuration
-kubectl describe svc httpbin-service
+kubectl describe svc httpbin-secure-service -n httpbin-secure
 ```
 
 ## 🧹 Cleanup

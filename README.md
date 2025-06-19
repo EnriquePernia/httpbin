@@ -129,6 +129,25 @@ resource "k3d_cluster" "sample_cluster" {
 }
 ```
 
+## 🏗️ Cluster Architecture
+
+**K3d cluster with 4 nodes total:**
+
+- **1 Control Plane** (`k3d-playson-server-0`) - manages cluster operations
+- **3 Worker Nodes** - run application workloads:
+
+- `k3d-playson-agent-0`
+- `k3d-playson-agent-1`
+- `playson-node-1-0`
+
+**Network Configuration:**
+
+- **API Server:** `localhost:6445` (kubectl access)
+- **Load Balancer:** `localhost:8080` → Traefik → HTTPBin pods
+- **Pod Distribution:** 3 HTTPBin replicas spread across all worker nodes for high availability
+
+**Load Balancing:** Traefik distributes requests in round-robin fashion across the 3 pods, ensuring even traffic distribution and fault tolerance.
+
 ### HTTPBin Deployment
 
 - **Replicas**: 3 pods for load balancing demonstration

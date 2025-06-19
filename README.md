@@ -84,9 +84,9 @@ resource "k3d_cluster" "sample_cluster" {
 - **1 Control Plane** (`k3d-playson-server-0`) - manages cluster operations
 - **3 Worker Nodes** - run application workloads:
 
-- `k3d-playson-agent-0`
-- `k3d-playson-agent-1`
-- `playson-node-1-0`
+  - `k3d-playson-agent-0`
+  - `k3d-playson-agent-1`
+  - `playson-node-1-0`
 
 **Network Configuration:**
 
@@ -118,6 +118,8 @@ cd httpbin-k3d-cluster
 
 ### 2. Deploy Infrastructure
 
+On the root folder:
+
 ```bash
 # Review plan before applying
 terraform -chdir=terraform init
@@ -129,6 +131,8 @@ kubectl get nodes
 ```
 
 ### 3. Deploy HTTPBin Application
+
+On the root folder:
 
 ```bash
 # Deploy HTTPBin pods and service
@@ -143,6 +147,8 @@ chmod +x ./scripts/deploy.sh
 
 ### 4. Test Ingress
 
+On the root folder:
+
 ```bash
 # Test ingress load balancing
 chmod +x ./scripts/test-loadbalancer.sh
@@ -155,8 +161,6 @@ chmod +x ./scripts/test-loadbalancer.sh
 
 #### 🎯 Expected Results
 
-**Successful Load Balancing:**
-
 ```bash
 INGRESS:
 Request 1: "origin": "10.42.2.0"
@@ -166,7 +170,7 @@ Request 4: "origin": "10.42.2.0"
 ...
 ```
 
-### Traffic Flow
+#### Traffic Flow
 
 localhost:8080 → Traefik → HTTPBin Service → Gateway Routing
 
@@ -174,7 +178,7 @@ localhost:8080 → Traefik → HTTPBin Service → Gateway Routing
 
 Keep in mind that what you are seeing is the **gateway IP** so if adding more nodes, the number of IPs could not match the nodes count.
 
-### Gateway to Node Mapping
+#### Gateway to Node Mapping
 
 **Current Setup (3 nodes):**
 

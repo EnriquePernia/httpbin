@@ -69,8 +69,11 @@ cd httpbin-k3d-cluster
 ### 2. Deploy Infrastructure
 
 ```bash
+# Review plan before applying
 terraform -chdir=terraform init
-terraform -chdir=terraform apply -auto-approve
+terraform -chdir=terraform plan -out=tfplan
+terraform -chdir=terraform show tfplan  # Review what will be created
+terraform -chdir=terraform apply tfplan  # Apply reviewed plan
 # Verify cluster
 kubectl get nodes
 ```
@@ -80,7 +83,7 @@ kubectl get nodes
 ```bash
 # Deploy HTTPBin pods and service
 chmod +x ./scripts/deploy.sh
-./deploy.sh
+./scripts/deploy.sh
 ```
 
 ## 🧪 Testing
@@ -90,11 +93,7 @@ chmod +x ./scripts/deploy.sh
 ```bash
 # Test ingress load balancing
 chmod +x ./scripts/test-loadbalancer.sh
-./test-loadbalancer.sh
-
-# Manual tests
-curl -H http://localhost:8080/get
-curl -H http://localhost:8080/status/200
+./scripts/test-loadbalancer.sh
 ```
 
 ### Available HTTPBin Endpoints

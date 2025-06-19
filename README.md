@@ -166,41 +166,27 @@ Request 4: "origin": "10.42.2.0"
 ...
 ```
 
+### Traffic Flow
+
+localhost:8080 → Traefik → HTTPBin Service → Gateway Routing
+
 **Different origin IPs = Different pods handling requests!** ✅
 
 Keep in mind that what you are seeing is the **gateway IP** so if adding more nodes, the number of IPs could not match the nodes count.
 
-┌─────────────────────────────────────────────────────────────┐
-│                    EXTERNAL TRAFFIC                        │
-│                 localhost:8080 requests                    │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                TRAEFIK LOAD BALANCER                       │
-│            (runs on control plane)                         │
-│         Decides which pod gets the request                 │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-              ┌───────┼───────┐
-              │   ROUND ROBIN │
-              └───────┼───────┘
-                      │
-    ┌─────────────────┼─────────────────┐
-    │                 │                 │
-    ▼                 ▼                 ▼
-┌─────────┐    ┌─────────────┐    ┌─────────────┐
-│Gateway  │    │Gateway      │    │Gateway      │
-│10.42.0.1│    │10.42.1.0    │    │10.42.2.0    │
-└────┬────┘    └──────┬──────┘    └──────┬──────┘
-     │                │                  │
-     ▼                ▼                  ▼
-┌─────────┐    ┌─────────────┐    ┌─────────────┐
-│ Pod A   │    │ Pod B       │    │ Pod C & D   │
-│10.42.0.x│    │10.42.1.x    │    │10.42.3.x    │
-│         │    │             │    │10.42.4.x    │
-│agent-0  │    │agent-1      │    │node-2-0     │
-│         │    │             │    │node-1-0     │
-└─────────┘    └─────────────┘    └─────────────┘
+### Gateway to Node Mapping
+
+**Current Setup (3 nodes):**
+
+- Gateway 10.42.0.1 → Pod A (agent-0)
+- Gateway 10.42.1.0 → Pod B (agent-1)  
+- Gateway 10.42.2.0 → Pod C (node-1-0)
+
+**Setup (4 nodes):**
+
+- Gateway 10.42.0.1 → Pod A (agent-0)
+- Gateway 10.42.1.0 → Pod B (agent-1)
+- Gateway 10.42.2.0 → Pod C (node-1-0) AND Pod D (node-2-0)
 
 ### Available HTTPBin Endpoints
 

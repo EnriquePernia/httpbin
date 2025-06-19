@@ -204,7 +204,7 @@ Keep in mind that what you are seeing is the **gateway IP** so if adding more no
 
 ### Understanding Load Distribution
 
-1. **Service Level**: Kubernetes random algorithm distributes across pods
+1. **Service Level**: Kubernetes [random](https://arc.net/l/quote/dnzokvsq) algorithm distributes across pods
 2. **Ingress Level**: Traefik load balances before reaching service
 3. **Node Level**: Pod anti-affinity spreads across cluster nodes
 
@@ -327,7 +327,7 @@ Benefit: Ensures fair resource sharing and stability
 
 **Current k3d Limitation:**
 
-- Service uses **random load balancing** (iptables mode)
+- Service uses **random load balancing** ([iptables mode](https://arc.net/l/quote/dnzokvsq))
 - Traefik routes to service, not individual pods
 - Uneven distribution possible with low traffic
 
